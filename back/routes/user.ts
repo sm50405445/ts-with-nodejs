@@ -1,3 +1,4 @@
+import { IUser } from './../types/index.d';
 import * as express from 'express';
 import * as bcrypt from 'bcrypt';
 import {isLoggedIn} from './middleware';
@@ -92,12 +93,6 @@ router.post('/logout',isLoggedIn,(req,res)=>{
     });
 })
 
-interface IUser extends User {
-    PostCount:number;
-    FollowingCount:number;
-    FollowerCount:number
-}
-
 router.get('/:id',async(req,res,next)=>{
     try{
         const user = await User.findOne({
@@ -124,6 +119,22 @@ router.get('/:id',async(req,res,next)=>{
         jsonUser.PostCount = jsonUser.Posts?jsonUser.Posts.length:0;
         jsonUser.FollowingCount = jsonUser.Followings?jsonUser.Followings!.length:0;
         jsonUser.FollowerCount = jsonUser.Followers?jsonUser.Followers!.length:0;
+    }
+    catch(err){
+        console.error(err);
+        return next(err)
+    }
+})
+
+router.get('/:id/followings',isLoggedIn,async(req,res,next)=>{
+    try{
+        const user = await User.findOne({
+            where:{id:parseInt(req.params.id,10) || (req.user && req.user.id) || 0}
+        })
+        if(!user) return res.status(404).send('no user')
+        const follower = await user.getFollowings({
+            attributes:['id','nickname'],
+        })
     }
     catch(err){
         console.error(err);

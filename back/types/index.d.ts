@@ -14,3 +14,8 @@ declare module "express-serve-static-core" {
 //     }
 //   }
 // }
+export interface IUser extends UserModel {
+  PostCount:number;
+  FollowingCount:number;
+  FollowerCount:number
+}
