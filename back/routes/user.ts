@@ -6,6 +6,7 @@ import User from '../models/user';
 import { Request,Response,NextFunction } from 'express';
 import passport = require('passport');
 import Post from '../models/post';
+import Image from '../models/image'
 
 const router = express.Router();
 
@@ -126,7 +127,7 @@ router.get('/:id',async(req,res,next)=>{
     }
 })
 
-router.get('/:id/followings',isLoggedIn,async(req,res,next)=>{
+router.get('/:id/followings',isLoggedIn,async(req:Request<any,any,any,{limit:string,offset:string}>,res,next)=>{
     try{
         const user = await User.findOne({
             where:{id:parseInt(req.params.id,10) || (req.user && req.user.id) || 0}
@@ -134,6 +135,8 @@ router.get('/:id/followings',isLoggedIn,async(req,res,next)=>{
         if(!user) return res.status(404).send('no user')
         const follower = await user.getFollowings({
             attributes:['id','nickname'],
+            limit:parseInt(req.query.limit,10),
+            offset:parseInt(req.query.offset,10)
         })
     }
     catch(err){
@@ -141,3 +144,57 @@ router.get('/:id/followings',isLoggedIn,async(req,res,next)=>{
         return next(err)
     }
 })
+
+router.get('/:id/follower',isLoggedIn,async(req,res,next)=>{
+    try{
+        const me = await User.findOne({
+            where:{id:req.user!.id}
+        })
+        await me!.removeFollower(parseInt(req.params.id,10))
+        res.send(req.params.id);
+    }
+    catch(err){
+        console.error(err);
+        next(err)
+    }
+})
+
+router.post('/:id/follow',isLoggedIn,async(req,res,next)=>{
+    try{
+        const me = await User.findOne({
+            where:{id:req.user!.id}
+        })
+        await me!.addFollowing(parseInt(req.params.id,10))
+        res.send(req.params.id)
+    }
+    catch(err){
+        console.error(err)
+        next(err)
+    }
+})
+
+router.get('/:id/posts',async(req,res,next)=>{
+    const posts = await Post.findAll({
+        where:{
+            UserId:parseInt(req.params.id,10) || (req.user && req.user.id) || 0,
+            RetweetId:null,
+        },
+        include:[{
+            model:User,
+            attributes:['id','nickname'],
+        },{
+            model:Image
+        },{
+            model:User,
+            as:'Likers',
+            attributes:['id']
+        }]
+    })
+    res.json(posts)
+})
+
+router.patch('/nickname',isLoggedIn,async(req,res,next)=>{
+
+})
+
+export default router;

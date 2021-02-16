@@ -10,12 +10,14 @@ import * as hpp from 'hpp';
 import * as helmet from 'helmet';
 
 import {sequelize} from './models';
+import userRouter from './routes/user';
+import postRouter from './routes/post';
 
 const app = express();
 const prod:boolean = process.env.NODE_ENV === 'production'
 
 app.set('port',prod?process.env.PORT:3065)
-sequelize.sync({force:false})
+sequelize.sync({force:true})
     .then(()=>{
         console.log('데이터 베이스 연결 성공');
         
@@ -54,8 +56,10 @@ app.use(expressSession({
         domain:prod ? '.nodebird.com':undefined
     }
 }))
-
-
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/user',userRouter);
+app.use('/post',postRouter);
 app.get('/',(req,res,next)=>{
     res.send('back')
 })

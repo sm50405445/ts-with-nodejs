@@ -6,14 +6,15 @@ declare module "express-serve-static-core" {
   }
 }
 
-// declare global {
-//   namespace Express {
-//     export interface User extends UserModel { }
-//     interface Request {
-//       user?:UserModel
-//     }
-//   }
-// }
+declare global {
+  namespace Express {
+    export interface User extends UserModel { }
+    interface Request {
+      user?:UserModel
+      
+    }
+  }
+}
 export interface IUser extends UserModel {
   PostCount:number;
   FollowingCount:number;
